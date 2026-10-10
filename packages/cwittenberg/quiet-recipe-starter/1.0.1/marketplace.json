@@ -1,0 +1,21 @@
+{
+  "schema": "ricewm.marketplace-listing/v1",
+  "id": "cwittenberg/quiet-recipe-starter",
+  "type": "appearance-recipe",
+  "name": "Quiet Recipe Starter",
+  "summary": "A declarative desktop recipe source starter.",
+  "version": "1.0.1",
+  "repository": "https://github.com/cwittenberg/ricewm-marketplace",
+  "artifact": "packages/cwittenberg/quiet-recipe-starter/1.0.1/dist/quiet-recipe-starter.rice.json",
+  "license": "MIT",
+  "tags": [
+    "minimal"
+  ],
+  "icon": "packages/cwittenberg/quiet-recipe-starter/1.0.1/media/icon.webp",
+  "screenshots": [
+    "packages/cwittenberg/quiet-recipe-starter/1.0.1/media/screen.webp"
+  ],
+  "requires": {
+    "sdkAbi": "rice-sdk-v1"
+  }
+}
