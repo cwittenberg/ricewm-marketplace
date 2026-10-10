@@ -36,3 +36,13 @@ approval or user permissions.
 It is explicitly unsigned development metadata. The app examples use the existing
 Rice SDK; bundle descriptors exercise the proposed component admission contract.
 They do not silently install or enable embedded desktop code.
+
+## Icons and screenshots
+
+Submit one square icon and one to eight screenshots with descriptions, asset
+rights, repository paths and SHA-256 digests. Prefer metadata-stripped WebP.
+Media must exist at the exact submitted source commit. The marketplace must
+independently decode and normalize images in isolation, apply byte/pixel limits
+and scan current decoder/codec/container dependencies before approval. Conversion
+alone is not proof of image safety. No such CI approval is currently granted by
+this development registry. Never submit screenshots containing private data.

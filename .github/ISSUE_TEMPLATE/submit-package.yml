@@ -43,6 +43,21 @@ body:
     id: package
     attributes:
       label: Packaging and changes
-      description: Package/source paths, license, screenshots, requested access, and changes since the previous release.
+      description: Package/source paths, license, requested access, and changes since the previous release.
+    validations:
+      required: true
+  - type: textarea
+    id: media
+    attributes:
+      label: Icon and screenshots
+      description: Include one square icon and one to eight screenshots with repository paths, SHA-256 digests, descriptions and asset rights. Prefer normalized WebP. These files must exist at the submitted commit; CI must independently check images and image-processing dependencies before approval.
+      placeholder: |
+        Icon: media/icon.webp
+        SHA-256: ...
+        Description: ...
+        Screenshot: media/screenshot-1.webp
+        SHA-256: ...
+        Description: ...
+        Asset license/credits: ...
     validations:
       required: true
