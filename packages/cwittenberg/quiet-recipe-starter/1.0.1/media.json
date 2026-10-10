@@ -12,5 +12,21 @@
       "path": "packages/cwittenberg/quiet-recipe-starter/1.0.1/media/screen.webp",
       "alt": "Native RiceWM desktop with the Quiet Work recipe applied on env.now."
     }
+  ],
+  "credits": [
+    {
+      "path": "packages/cwittenberg/quiet-recipe-starter/1.0.1/media/icon.webp",
+      "creator": "RiceWM contributors",
+      "license": "MIT",
+      "origin": "original",
+      "notice": "packages/cwittenberg/quiet-recipe-starter/1.0.1/LICENSE"
+    },
+    {
+      "path": "packages/cwittenberg/quiet-recipe-starter/1.0.1/media/screen.webp",
+      "creator": "RiceWM contributors",
+      "license": "MIT",
+      "origin": "original",
+      "notice": "packages/cwittenberg/quiet-recipe-starter/1.0.1/LICENSE"
+    }
   ]
 }
