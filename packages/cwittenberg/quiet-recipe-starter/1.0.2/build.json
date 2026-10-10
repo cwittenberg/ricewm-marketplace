@@ -1,0 +1,10 @@
+{
+  "schema": "ricewm.marketplace-build/v1",
+  "format": "recipe",
+  "files": [
+    {
+      "source": "packages/cwittenberg/quiet-recipe-starter/1.0.2/src/recipe.rice.json",
+      "path": "recipe.rice.json"
+    }
+  ]
+}

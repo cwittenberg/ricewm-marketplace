@@ -188,7 +188,7 @@
       "name": "Quiet Work",
       "summary": "Calm desktop colors without executable additions.",
       "publisher": "cwittenberg",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "status": "example",
       "license": "MIT",
       "tags": [
@@ -205,13 +205,13 @@
         }
       ],
       "artifact": {
-        "path": "recipes/quiet-work/1.0.1/quiet-work.rice.json",
-        "sha256": "6ac3e65cebf165b03354129f1f61b8b2cc2f27a258bb7959df4740d2d215cb55",
-        "bytes": 1039
+        "path": "recipes/quiet-work/1.0.2/quiet-work.rice.json",
+        "bytes": 3051,
+        "sha256": "0a7af9c0e04bf5c1243ea8eab4536da7623c8b059f70cf829583d09b4ea8acfc"
       },
       "source": {
         "repository": "cwittenberg/ricewm-marketplace",
-        "path": "recipes/quiet-work/1.0.1"
+        "path": "recipes/quiet-work/1.0.2"
       },
       "compatibility": {
         "status": "requires-host-qualification",
