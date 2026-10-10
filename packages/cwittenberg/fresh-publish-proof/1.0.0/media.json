@@ -1,0 +1,32 @@
+{
+  "schema": "ricewm.marketplace-media/v1",
+  "rights": "MIT-licensed original RiceWM contributors starter icon retained with its full notice. Screenshot captures only this exact generated app in the trusted native SDK workflow and was normalized by the audited isolated Rust decoder. Ultimate copyright ownership requires operator review.",
+  "images": [
+    {
+      "role": "icon",
+      "path": "packages/cwittenberg/fresh-publish-proof/1.0.0/media/icon.webp",
+      "alt": "Licensed original starter icon"
+    },
+    {
+      "role": "screenshot",
+      "path": "packages/cwittenberg/fresh-publish-proof/1.0.0/media/screenshot.webp",
+      "alt": "Actual native Fresh source proof app showing its Ready label and Say hello button"
+    }
+  ],
+  "credits": [
+    {
+      "path": "packages/cwittenberg/fresh-publish-proof/1.0.0/media/icon.webp",
+      "creator": "RiceWM contributors",
+      "license": "MIT",
+      "origin": "original",
+      "notice": "packages/cwittenberg/fresh-publish-proof/1.0.0/LICENSE"
+    },
+    {
+      "path": "packages/cwittenberg/fresh-publish-proof/1.0.0/media/screenshot.webp",
+      "creator": "RiceWM contributors",
+      "license": "MIT",
+      "origin": "original",
+      "notice": "packages/cwittenberg/fresh-publish-proof/1.0.0/LICENSE"
+    }
+  ]
+}

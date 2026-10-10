@@ -1,0 +1,20 @@
+{
+  "schema": "ricewm.marketplace-listing/v1",
+  "id": "cwittenberg/fresh-publish-proof",
+  "type": "app",
+  "appId": "dev.herdr.generated.fresh-publish-proof",
+  "name": "Fresh source proof",
+  "summary": "Native SDK source-publication test fixture.",
+  "version": "1.0.0",
+  "repository": "https://github.com/cwittenberg/ricewm-marketplace",
+  "artifact": "packages/cwittenberg/fresh-publish-proof/1.0.0/fresh-publish-proof.riceapp",
+  "license": "MIT",
+  "tags": [],
+  "icon": "packages/cwittenberg/fresh-publish-proof/1.0.0/media/icon.webp",
+  "screenshots": [
+    "packages/cwittenberg/fresh-publish-proof/1.0.0/media/screenshot.webp"
+  ],
+  "requires": {
+    "sdkAbi": "rice-sdk-v1"
+  }
+}

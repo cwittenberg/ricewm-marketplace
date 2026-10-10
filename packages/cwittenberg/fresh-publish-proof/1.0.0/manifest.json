@@ -1,0 +1,14 @@
+{
+  "schema": "ricewm.app/v1",
+  "id": "dev.herdr.generated.fresh-publish-proof",
+  "name": "Fresh source proof",
+  "version": "1.0.0",
+  "entry": "app.mjs",
+  "categories": [
+    "Development"
+  ],
+  "permissions": {
+    "services": [],
+    "bus": {}
+  }
+}

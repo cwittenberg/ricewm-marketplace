@@ -1,0 +1,22 @@
+{
+  "schema": "ricewm.marketplace-build/v1",
+  "format": "riceapp",
+  "files": [
+    {
+      "source": "packages/cwittenberg/fresh-publish-proof/1.0.0/manifest.json",
+      "path": "manifest.json"
+    },
+    {
+      "source": "packages/cwittenberg/fresh-publish-proof/1.0.0/app.mjs",
+      "path": "app.mjs"
+    },
+    {
+      "source": "packages/cwittenberg/fresh-publish-proof/1.0.0/LICENSE",
+      "path": "LICENSE"
+    },
+    {
+      "source": "packages/cwittenberg/fresh-publish-proof/1.0.0/README.md",
+      "path": "README.md"
+    }
+  ]
+}
