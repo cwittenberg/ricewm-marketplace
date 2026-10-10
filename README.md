@@ -2,6 +2,10 @@
 
 Public packages and catalog records for RiceWM: `.riceapp` applications,
 desktop recipes, custom GNOME extensions, KDE widgets and combined bundles.
+Portable spatial desktops, including Construct worlds, can also be submitted
+with their contained world, models, theme, license and authoring sources. They
+declare the Rice spatial engine API and required host capabilities. The shared
+renderer is supplied by RiceWM; authoring source files are never install hooks.
 
 This repository contains distributable creations. Marketplace UI, services,
 scanners and RiceWM host implementation are maintained privately in `webexe`.
