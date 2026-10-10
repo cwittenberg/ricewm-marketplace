@@ -1,0 +1,23 @@
+{
+  "schema": "ricewm.bundle-components/v1",
+  "components": [
+    {
+      "id": "dev.herdr.generated.marketplace-quiet-panel",
+      "kind": "app",
+      "root": "app",
+      "profile": "rice-app-v1",
+      "required": true,
+      "permissions": []
+    },
+    {
+      "id": "quiet-panel@ricewm-marketplace",
+      "kind": "gnome-extension",
+      "root": "extensions/quiet-panel",
+      "profile": "gnome-50",
+      "required": false,
+      "permissions": [
+        "panel.indicator"
+      ]
+    }
+  ]
+}

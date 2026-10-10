@@ -1,0 +1,8 @@
+{
+  "schema": "ricewm.bundle-components/v1",
+  "components": [
+    { "id": "dev.herdr.generated.marketplace-companion", "kind": "app", "root": "app", "profile": "rice-app-v1", "required": true, "permissions": [] },
+    { "id": "quiet-panel@ricewm-marketplace", "kind": "gnome-extension", "root": "extensions/quiet-panel", "profile": "gnome-50", "required": false, "permissions": ["panel.indicator"] },
+    { "id": "dev.ricewm.marketplace.clock", "kind": "kde-widget", "root": "widgets/little-clock", "profile": "plasma-applet-v1", "required": false, "permissions": [] }
+  ]
+}

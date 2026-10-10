@@ -1,0 +1,14 @@
+{
+  "schema": "ricewm.app/v1",
+  "id": "dev.herdr.generated.marketplace-little-clock",
+  "name": "Little Clock",
+  "version": "1.0.0",
+  "entry": "app.mjs",
+  "categories": [
+    "Utility"
+  ],
+  "permissions": {
+    "services": [],
+    "bus": {}
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "schema": "ricewm.app/v1",
+  "id": "dev.herdr.generated.marketplace-counter",
+  "name": "Little Counter",
+  "version": "1.0.0",
+  "entry": "app.mjs",
+  "categories": ["Utility"],
+  "permissions": { "services": [], "bus": {} }
+}

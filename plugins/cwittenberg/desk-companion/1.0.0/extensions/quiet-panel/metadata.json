@@ -1,0 +1,7 @@
+{
+  "uuid": "quiet-panel@ricewm-marketplace",
+  "name": "Quiet Panel",
+  "description": "A local custom panel indicator for marketplace compatibility testing.",
+  "shell-version": ["50"],
+  "version": 1
+}

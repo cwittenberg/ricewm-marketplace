@@ -1,0 +1,47 @@
+name: Submit or update a Rice creation
+description: Request qualification of an exact source version; this does not approve or publish it.
+title: "[Submission] "
+body:
+  - type: markdown
+    attributes:
+      value: "Source and all embedded component code must be public and licensed. Do not include tokens or private documents."
+  - type: input
+    id: repository
+    attributes:
+      label: Public source repository
+      placeholder: https://github.com/owner/project
+    validations:
+      required: true
+  - type: input
+    id: commit
+    attributes:
+      label: Exact source commit
+      description: A 40-character commit SHA; branches and tags alone are insufficient.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: New package version
+      placeholder: 1.0.0
+    validations:
+      required: true
+  - type: dropdown
+    id: components
+    attributes:
+      label: Included component types
+      multiple: true
+      options:
+        - Rice app
+        - Desktop recipe
+        - Custom GNOME extension
+        - Custom KDE widget
+    validations:
+      required: true
+  - type: textarea
+    id: package
+    attributes:
+      label: Packaging and changes
+      description: Package/source paths, license, screenshots, requested access, and changes since the previous release.
+    validations:
+      required: true

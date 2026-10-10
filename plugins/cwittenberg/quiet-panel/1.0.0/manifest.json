@@ -1,0 +1,14 @@
+{
+  "schema": "ricewm.app/v1",
+  "id": "dev.herdr.generated.marketplace-quiet-panel",
+  "name": "Quiet Panel",
+  "version": "1.0.0",
+  "entry": "app/app.mjs",
+  "categories": [
+    "Utility"
+  ],
+  "permissions": {
+    "services": [],
+    "bus": {}
+  }
+}

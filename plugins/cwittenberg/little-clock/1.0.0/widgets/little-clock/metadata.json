@@ -1,0 +1,5 @@
+{
+  "KPlugin": { "Id": "dev.ricewm.marketplace.clock", "Name": "Little Clock", "Description": "An offline custom KDE clock widget.", "Version": "1.0.0", "License": "MIT" },
+  "KPackageStructure": "Plasma/Applet",
+  "X-Plasma-MainScript": "ui/main.qml"
+}

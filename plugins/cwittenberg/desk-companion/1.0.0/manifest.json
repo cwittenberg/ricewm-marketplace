@@ -1,0 +1,9 @@
+{
+  "schema": "ricewm.app/v1",
+  "id": "dev.herdr.generated.marketplace-companion",
+  "name": "Desk Companion",
+  "version": "1.0.0",
+  "entry": "app/app.mjs",
+  "categories": ["Utility"],
+  "permissions": { "services": [], "bus": {} }
+}

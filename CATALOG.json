@@ -1,0 +1,222 @@
+{
+  "schema": "ricewm.marketplace-catalog/v1",
+  "generation": 1,
+  "status": "unsigned-development-inventory",
+  "entries": [
+    {
+      "id": "cwittenberg/counter",
+      "name": "Little Counter",
+      "summary": "A small offline counter with reset.",
+      "publisher": "cwittenberg",
+      "version": "1.0.0",
+      "status": "example",
+      "license": "MIT",
+      "tags": [
+        "app"
+      ],
+      "components": [
+        {
+          "id": "dev.herdr.generated.marketplace-counter",
+          "kind": "app",
+          "root": "",
+          "profile": "rice-app-v1",
+          "required": true,
+          "permissions": []
+        }
+      ],
+      "artifact": {
+        "path": "plugins/cwittenberg/counter/1.0.0/counter.riceapp",
+        "sha256": "da07f4791ff740e7a17b7e6ec37581bd59acde9aa35f0f1c192747a975a36437",
+        "bytes": 2345
+      },
+      "source": {
+        "repository": "cwittenberg/ricewm-marketplace",
+        "path": "plugins/cwittenberg/counter/1.0.0"
+      },
+      "compatibility": {
+        "status": "requires-host-qualification",
+        "note": "Development example; native host and security approval are not yet verified."
+      }
+    },
+    {
+      "id": "cwittenberg/desk-companion",
+      "name": "Desk Companion",
+      "summary": "An app, custom GNOME indicator and KDE clock in one bundle.",
+      "publisher": "cwittenberg",
+      "version": "1.0.0",
+      "status": "example",
+      "license": "MIT",
+      "tags": [
+        "app",
+        "gnome-extension",
+        "kde-widget"
+      ],
+      "components": [
+        {
+          "id": "dev.herdr.generated.marketplace-companion",
+          "kind": "app",
+          "root": "app",
+          "profile": "rice-app-v1",
+          "required": true,
+          "permissions": []
+        },
+        {
+          "id": "quiet-panel@ricewm-marketplace",
+          "kind": "gnome-extension",
+          "root": "extensions/quiet-panel",
+          "profile": "gnome-50",
+          "required": false,
+          "permissions": [
+            "panel.indicator"
+          ]
+        },
+        {
+          "id": "dev.ricewm.marketplace.clock",
+          "kind": "kde-widget",
+          "root": "widgets/little-clock",
+          "profile": "plasma-applet-v1",
+          "required": false,
+          "permissions": []
+        }
+      ],
+      "artifact": {
+        "path": "plugins/cwittenberg/desk-companion/1.0.0/desk-companion.riceapp",
+        "sha256": "315d54fec5b4eaf5a7c2447ff666e8f5629ae446a861a24cc70c862f2f4bfab1",
+        "bytes": 5536
+      },
+      "source": {
+        "repository": "cwittenberg/ricewm-marketplace",
+        "path": "plugins/cwittenberg/desk-companion/1.0.0"
+      },
+      "compatibility": {
+        "status": "requires-host-qualification",
+        "note": "Development example; native host and security approval are not yet verified."
+      }
+    },
+    {
+      "id": "cwittenberg/little-clock",
+      "name": "Little Clock",
+      "summary": "An offline KDE clock widget, bundled with its source.",
+      "publisher": "cwittenberg",
+      "version": "1.0.0",
+      "status": "example",
+      "license": "MIT",
+      "tags": [
+        "app",
+        "kde-widget"
+      ],
+      "components": [
+        {
+          "id": "dev.herdr.generated.marketplace-little-clock",
+          "kind": "app",
+          "root": "app",
+          "profile": "rice-app-v1",
+          "required": true,
+          "permissions": []
+        },
+        {
+          "id": "dev.ricewm.marketplace.clock",
+          "kind": "kde-widget",
+          "root": "widgets/little-clock",
+          "profile": "plasma-applet-v1",
+          "required": false,
+          "permissions": []
+        }
+      ],
+      "artifact": {
+        "path": "plugins/cwittenberg/little-clock/1.0.0/little-clock.riceapp",
+        "sha256": "f3171f782162c315e4e04636e875b1ffd0cee7c734d73e2b5f212cfbe01e1466",
+        "bytes": 4366
+      },
+      "source": {
+        "repository": "cwittenberg/ricewm-marketplace",
+        "path": "plugins/cwittenberg/little-clock/1.0.0"
+      },
+      "compatibility": {
+        "status": "requires-host-qualification",
+        "note": "Development example; native host and security approval are not yet verified."
+      }
+    },
+    {
+      "id": "cwittenberg/quiet-panel",
+      "name": "Quiet Panel",
+      "summary": "A custom GNOME panel indicator, bundled without an upstream store listing.",
+      "publisher": "cwittenberg",
+      "version": "1.0.0",
+      "status": "example",
+      "license": "MIT",
+      "tags": [
+        "app",
+        "gnome-extension"
+      ],
+      "components": [
+        {
+          "id": "dev.herdr.generated.marketplace-quiet-panel",
+          "kind": "app",
+          "root": "app",
+          "profile": "rice-app-v1",
+          "required": true,
+          "permissions": []
+        },
+        {
+          "id": "quiet-panel@ricewm-marketplace",
+          "kind": "gnome-extension",
+          "root": "extensions/quiet-panel",
+          "profile": "gnome-50",
+          "required": false,
+          "permissions": [
+            "panel.indicator"
+          ]
+        }
+      ],
+      "artifact": {
+        "path": "plugins/cwittenberg/quiet-panel/1.0.0/quiet-panel.riceapp",
+        "sha256": "59c2f97da778a140f0f8ba0515da1b450dad9927c04c3faa7ffa2a37d826e546",
+        "bytes": 4410
+      },
+      "source": {
+        "repository": "cwittenberg/ricewm-marketplace",
+        "path": "plugins/cwittenberg/quiet-panel/1.0.0"
+      },
+      "compatibility": {
+        "status": "requires-host-qualification",
+        "note": "Development example; native host and security approval are not yet verified."
+      }
+    },
+    {
+      "id": "cwittenberg/quiet-work",
+      "name": "Quiet Work",
+      "summary": "Calm desktop colors without executable additions.",
+      "publisher": "cwittenberg",
+      "version": "1.0.0",
+      "status": "example",
+      "license": "MIT",
+      "tags": [
+        "appearance-recipe"
+      ],
+      "components": [
+        {
+          "id": "cwittenberg.quiet-work",
+          "kind": "appearance-recipe",
+          "root": "",
+          "profile": "rice-theme-v2",
+          "required": true,
+          "permissions": []
+        }
+      ],
+      "artifact": {
+        "path": "plugins/cwittenberg/quiet-work/1.0.0/recipe.rice.json",
+        "sha256": "bad7b5da1d3142b77c6132eebe450b3390d270c2b6e691ad5a932f64e7c04bdc",
+        "bytes": 778
+      },
+      "source": {
+        "repository": "cwittenberg/ricewm-marketplace",
+        "path": "plugins/cwittenberg/quiet-work/1.0.0"
+      },
+      "compatibility": {
+        "status": "requires-host-qualification",
+        "note": "Development example; native host and security approval are not yet verified."
+      }
+    }
+  ]
+}
