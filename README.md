@@ -25,7 +25,12 @@ but it must pass qualification for the supported Rice host before approval.
 Use the repository's submission form for a new creation or a new version. Include
 the public source repository, exact commit, package version, license and component
 types. Never include credentials or private user content. Each new version must
-go through the marketplace-owned automated checks and promotion process.
+go through marketplace-owned automated checks, final operator review and the
+separate promotion process. Passing checks never publishes automatically. The
+operator can reject with actionable reasons, but cannot bypass failed checks.
+
+Read [the submission guidelines](SUBMISSION_GUIDELINES.md) before submitting.
+Generated and manually written code follow the same rules.
 
 Existing approved versions remain available while an update is reviewed. Reusing
 a published version with different bytes is prohibited. The serving authority

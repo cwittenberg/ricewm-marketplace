@@ -61,3 +61,10 @@ body:
         Asset license/credits: ...
     validations:
       required: true
+  - type: checkboxes
+    id: guidelines
+    attributes:
+      label: Submission guidelines
+      options:
+        - label: I read the Rice submission guidelines and will address automated findings and operator review feedback.
+          required: true
