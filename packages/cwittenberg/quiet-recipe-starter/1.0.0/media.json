@@ -1,0 +1,16 @@
+{
+  "schema": "ricewm.marketplace-media/v1",
+  "rights": "Original MIT-licensed icons and reference previews. App screenshot uses actual SDK control model but is not a native RiceWM capture. Recipe image is a colour reference and not a live desktop. These references do not establish native UX or qualification.",
+  "images": [
+    {
+      "role": "icon",
+      "path": "packages/cwittenberg/quiet-recipe-starter/1.0.0/media/icon.webp",
+      "alt": "Quiet Recipe Starter original icon"
+    },
+    {
+      "role": "screenshot",
+      "path": "packages/cwittenberg/quiet-recipe-starter/1.0.0/media/screen.webp",
+      "alt": "Quiet recipe colour reference; not a live RiceWM desktop capture."
+    }
+  ]
+}

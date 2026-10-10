@@ -1,0 +1,16 @@
+{
+  "schema": "ricewm.marketplace-media/v1",
+  "rights": "Original MIT-licensed icons and reference previews. App screenshot uses actual SDK control model but is not a native RiceWM capture. Recipe image is a colour reference and not a live desktop. These references do not establish native UX or qualification.",
+  "images": [
+    {
+      "role": "icon",
+      "path": "packages/cwittenberg/counter-starter/1.0.0/media/icon.webp",
+      "alt": "Counter Starter original icon"
+    },
+    {
+      "role": "screenshot",
+      "path": "packages/cwittenberg/counter-starter/1.0.0/media/screen.webp",
+      "alt": "SDK control reference preview after incrementing twice; not a native RiceWM capture."
+    }
+  ]
+}

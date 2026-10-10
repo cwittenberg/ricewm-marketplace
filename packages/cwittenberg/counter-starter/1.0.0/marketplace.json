@@ -1,0 +1,22 @@
+{
+  "schema": "ricewm.marketplace-listing/v1",
+  "id": "cwittenberg/counter-starter",
+  "type": "app",
+  "name": "Counter Starter",
+  "summary": "A small SDK counter source starter.",
+  "version": "1.0.0",
+  "repository": "https://github.com/cwittenberg/ricewm-marketplace",
+  "artifact": "packages/cwittenberg/counter-starter/1.0.0/dist/counter-starter.riceapp",
+  "appId": "dev.herdr.generated.counter-starter",
+  "license": "MIT",
+  "tags": [
+    "minimal"
+  ],
+  "icon": "packages/cwittenberg/counter-starter/1.0.0/media/icon.webp",
+  "screenshots": [
+    "packages/cwittenberg/counter-starter/1.0.0/media/screen.webp"
+  ],
+  "requires": {
+    "sdkAbi": "rice-sdk-v1"
+  }
+}

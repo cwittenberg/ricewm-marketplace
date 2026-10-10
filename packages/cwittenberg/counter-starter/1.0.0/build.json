@@ -1,0 +1,18 @@
+{
+  "schema": "ricewm.marketplace-build/v1",
+  "format": "riceapp",
+  "files": [
+    {
+      "source": "packages/cwittenberg/counter-starter/1.0.0/src/manifest.json",
+      "path": "manifest.json"
+    },
+    {
+      "source": "packages/cwittenberg/counter-starter/1.0.0/src/app.mjs",
+      "path": "app.mjs"
+    },
+    {
+      "source": "packages/cwittenberg/counter-starter/1.0.0/src/LICENSE",
+      "path": "LICENSE"
+    }
+  ]
+}

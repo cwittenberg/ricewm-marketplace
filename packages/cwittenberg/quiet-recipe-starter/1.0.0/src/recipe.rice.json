@@ -1,0 +1,8 @@
+{
+  "schema": "ricewm.shared-desktop-recipe/v1",
+  "theme": {
+    "file": "quiet-work.theme",
+    "source": "{\"$schema\":\"ricewm.theme/v2\",\"name\":\"Quiet Work\",\"description\":\"A calm appearance recipe with no executable additions.\",\"appearance\":{\"accent\":\"c3d49a\",\"taskbar.bar\":\"303b2d\",\"taskbar.text\":\"eeeede\",\"menu.background\":\"20271f\",\"menu.text\":\"eeeede\",\"menu.hover\":\"4b5b38\",\"frame.body\":\"22271f\",\"frame.text\":\"eeeede\",\"frame.active\":\"91a96d\"}}"
+  },
+  "readme": "Quiet Recipe Starter is original MIT-licensed declarative source for testing submissions. Not an approved marketplace release."
+}
