@@ -1,0 +1,32 @@
+{
+  "schema": "ricewm.marketplace-media/v1",
+  "rights": "Original custom extension and licensed RiceWM contributors starter icon. Screenshot is an original capture of only the exact extension’s owned indicator and popup surfaces in the trusted native RiceWM GNOME host. Automated declarations do not verify authorship; operator review remains required.",
+  "images": [
+    {
+      "role": "icon",
+      "path": "packages/cwittenberg/gnome-indicator-starter/1.0.0/media/icon.webp",
+      "alt": "Original RiceWM starter icon"
+    },
+    {
+      "role": "screenshot",
+      "path": "packages/cwittenberg/gnome-indicator-starter/1.0.0/media/screenshot.webp",
+      "alt": "Actual owned native Marketplace indicator and Activate proof popup menu"
+    }
+  ],
+  "credits": [
+    {
+      "path": "packages/cwittenberg/gnome-indicator-starter/1.0.0/media/icon.webp",
+      "creator": "RiceWM contributors",
+      "license": "MIT",
+      "origin": "original",
+      "notice": "packages/cwittenberg/gnome-indicator-starter/1.0.0/LICENSE"
+    },
+    {
+      "path": "packages/cwittenberg/gnome-indicator-starter/1.0.0/media/screenshot.webp",
+      "creator": "RiceWM contributors",
+      "license": "MIT",
+      "origin": "original",
+      "notice": "packages/cwittenberg/gnome-indicator-starter/1.0.0/LICENSE"
+    }
+  ]
+}

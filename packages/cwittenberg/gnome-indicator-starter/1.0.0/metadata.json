@@ -1,0 +1,9 @@
+{
+  "uuid": "market-indicator@local",
+  "name": "Marketplace indicator",
+  "description": "Marketplace indicator",
+  "shell-version": [
+    "50"
+  ],
+  "version": 1
+}

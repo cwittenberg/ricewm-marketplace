@@ -1,0 +1,23 @@
+{
+  "schema": "ricewm.marketplace-listing/v1",
+  "id": "cwittenberg/gnome-indicator-starter",
+  "type": "gnome-extension",
+  "componentId": "market-indicator@local",
+  "name": "Marketplace indicator",
+  "summary": "Custom GNOME 50 panel label and popup action, packaged as a RiceWM extension.",
+  "repository": "https://github.com/cwittenberg/ricewm-marketplace",
+  "version": "1.0.0",
+  "artifact": "packages/cwittenberg/gnome-indicator-starter/1.0.0/dist/gnome-indicator-starter.riceapp",
+  "icon": "packages/cwittenberg/gnome-indicator-starter/1.0.0/media/icon.webp",
+  "screenshots": [
+    "packages/cwittenberg/gnome-indicator-starter/1.0.0/media/screenshot.webp"
+  ],
+  "license": "MIT",
+  "tags": [
+    "gnome",
+    "indicator"
+  ],
+  "requires": {
+    "sdkAbi": "rice-sdk-v1"
+  }
+}

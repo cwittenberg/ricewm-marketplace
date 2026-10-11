@@ -1,0 +1,26 @@
+{
+  "schema": "ricewm.marketplace-build/v1",
+  "format": "riceapp",
+  "files": [
+    {
+      "path": "LICENSE",
+      "source": "packages/cwittenberg/gnome-indicator-starter/1.0.0/LICENSE"
+    },
+    {
+      "path": "README.md",
+      "source": "packages/cwittenberg/gnome-indicator-starter/1.0.0/README.md"
+    },
+    {
+      "path": "extension.js",
+      "source": "packages/cwittenberg/gnome-indicator-starter/1.0.0/extension.js"
+    },
+    {
+      "path": "metadata.json",
+      "source": "packages/cwittenberg/gnome-indicator-starter/1.0.0/metadata.json"
+    },
+    {
+      "path": "rice-bundle.json",
+      "source": "packages/cwittenberg/gnome-indicator-starter/1.0.0/rice-bundle.json"
+    }
+  ]
+}
