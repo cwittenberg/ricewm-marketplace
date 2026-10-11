@@ -163,7 +163,7 @@ def qualify_issue(number):
     except urllib.error.HTTPError as error:
         # Only the fixed trusted service's bounded public validation message;
         # credentials, response headers and status capabilities are omitted.
-        if error.code in (400, 401, 403, 413, 429):
+        if error.code in (400, 401, 403, 413, 429, 502, 503):
             data = error.read(4096)
             try:
                 message = json.loads(data).get('error', {}).get('message', '')
