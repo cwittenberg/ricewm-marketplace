@@ -30,8 +30,13 @@ jobs:
     if: github.event_name == 'workflow_dispatch' || github.repository == 'cwittenberg/ricewm-marketplace'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        source_root: ${{ github.event_name == 'workflow_dispatch' && fromJSON(format('[{0}]', toJSON(inputs.source_root))) || fromJSON('["packages/cwittenberg/fresh-publish-proof/1.0.0","packages/cwittenberg/quiet-recipe-starter/1.0.3","packages/cwittenberg/gnome-indicator-starter/1.0.0"]') }}
     env:
-      RICE_SOURCE_ROOT: ${{ inputs.source_root || 'packages/cwittenberg/quiet-recipe-starter/1.0.3' }}
+      RICE_SOURCE_ROOT: ${{ matrix.source_root }}
       RICE_MODE: ${{ inputs.mode || 'submit' }}
       RICE_GITHUB_SOURCE_TOKEN: ${{ github.token }}
     steps:
