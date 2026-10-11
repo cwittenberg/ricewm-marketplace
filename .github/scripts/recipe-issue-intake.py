@@ -154,7 +154,7 @@ def qualify_issue(number):
         token = json.load(response)['value']
     request = urllib.request.Request(origin + '/v1/marketplace/registry/issues',
         data=json.dumps({'issue': number}).encode(), method='POST', headers={
-            'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json', 'User-Agent': 'RiceWM-Marketplace-Registry/1.0', 'Authorization': 'Bearer ' + token,
             'X-Rice-Source-Token': os.environ['GITHUB_TOKEN']})
     opener = urllib.request.build_opener(NoRedirect())
     try:
@@ -179,7 +179,7 @@ def qualify_issue(number):
     for _ in range(120):
         time.sleep(5)
         request = urllib.request.Request(status_url, headers={
-            'Authorization': 'Bearer ' + receipt['statusToken']})
+            'User-Agent': 'RiceWM-Marketplace-Registry/1.0', 'Authorization': 'Bearer ' + receipt['statusToken']})
         with opener.open(request, timeout=30) as response:
             result = json.load(response)
         if result.get('state') in ('queued', 'running'):
