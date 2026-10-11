@@ -27,6 +27,7 @@ concurrency:
 
 jobs:
   submit:
+    if: github.event_name == 'workflow_dispatch' || github.repository == 'cwittenberg/ricewm-marketplace'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
@@ -49,6 +50,11 @@ jobs:
           STATES = {'queued', 'running', 'checks-pending', 'checks-failed',
                     'qualification-failed', 'review-delivery-blocked', 'preflight-complete',
                     'review-pending', 'approved', 'rejected', 'published', 'withdrawn'}
+          CHECKS = {'guidelines', 'source-provenance', 'build', 'dependencies', 'secrets',
+                    'code-analysis', 'embedded-images', 'listing-media', 'runtime-capabilities',
+                    'native-ux', 'license-rights'}
+          RULES = {'RM-METADATA-001', 'RM-PACKAGE-001', 'RM-CODE-001', 'RM-MEDIA-001',
+                   'RM-RIGHTS-001', 'RM-LIFECYCLE-001', 'RM-UX-001', 'RM-SECURITY-001'}
 
           class WorkflowError(Exception):
               pass
@@ -78,7 +84,21 @@ jobs:
                   stderr=subprocess.DEVNULL, timeout=35, env={'PATH': '/usr/bin:/bin', 'LANG': 'C.UTF-8'})
               marker = re.search(rb'\n__RICE_HTTP_(\d{3})__\n$', process.stdout)
               if process.returncode or not marker or int(marker[1]) != expected or marker.start() > maximum:
-                  raise WorkflowError('Marketplace HTTPS request failed; do not automatically resubmit.')
+                  status = int(marker[1]) if marker and int(marker[1]) <= 599 else 0
+                  diagnostic = {'kind': 'marketplace-http-diagnostic', 'httpStatus': status,
+                      'curlExit': process.returncode if 0 <= process.returncode <= 127 else -1,
+                      'responseJson': False, 'errorCode': 'unknown'}
+                  if marker and marker.start() <= maximum:
+                      try:
+                          response = json.loads(process.stdout[:marker.start()])
+                          diagnostic['responseJson'] = isinstance(response, dict)
+                          code = response.get('error', {}).get('code') if isinstance(response, dict) and isinstance(response.get('error'), dict) else None
+                          if isinstance(code, str) and code in {'marketplace-submission'}:
+                              diagnostic['errorCode'] = code
+                      except (ValueError, UnicodeError):
+                          pass
+                  print(json.dumps(diagnostic), flush=True)
+                  raise WorkflowError('Marketplace HTTPS request failed (HTTP ' + str(status) + '); do not automatically resubmit.')
               try:
                   result = json.loads(process.stdout[:marker.start()])
               except (ValueError, UnicodeError):
@@ -102,7 +122,8 @@ jobs:
                           raise WorkflowError('Unexpected or oversized HTTPS response.')
               except (urllib.error.URLError, TimeoutError) as error:
                   # Never print request URLs, response bodies, headers, or credentials.
-                  raise WorkflowError('HTTPS request failed; do not automatically resubmit.') from None
+                  status = error.code if isinstance(error, urllib.error.HTTPError) and 100 <= error.code <= 599 else 0
+                  raise WorkflowError('GitHub identity HTTPS request failed (HTTP ' + str(status) + ').') from None
               try:
                   value = json.loads(raw)
               except (ValueError, UnicodeError):
@@ -126,6 +147,61 @@ jobs:
               return urllib.parse.urlunsplit((url.scheme, url.netloc, url.path,
                   urllib.parse.urlencode(query), ''))
 
+          def identity_profile(token, env):
+              # Untrusted decoded claims are diagnostics only, never admission
+              # evidence. Output contains no raw claims, JWT segments or URLs.
+              try:
+                  header, claims = [json.loads(base64.urlsafe_b64decode(part + '=' * (-len(part) % 4)))
+                                    for part in token.split('.')[:2]]
+                  if not isinstance(header, dict) or not isinstance(claims, dict):
+                      raise ValueError()
+                  repository, ref, commit = [env.get(key, '') for key in ('GITHUB_REPOSITORY', 'GITHUB_REF', 'GITHUB_SHA')]
+                  owner, name = repository.split('/')
+                  numeric = lambda value: type(value) is int
+                  difference = lambda first, second: first - second if numeric(first) and numeric(second) and -86400 <= first - second <= 86400 else None
+                  value_type = lambda value: 'null' if value is None else 'boolean' if type(value) is bool else 'number' if type(value) in (int, float) else 'string' if type(value) is str else 'array' if type(value) is list else 'object' if type(value) is dict else 'other'
+                  required_claims = ('iss', 'aud', 'sub', 'iat', 'nbf', 'exp', 'repository', 'repository_id',
+                      'repository_owner', 'repository_owner_id', 'repository_visibility', 'sha', 'workflow_sha',
+                      'actor', 'actor_id', 'event_name', 'ref', 'ref_type', 'workflow_ref', 'run_id', 'run_attempt')
+                  allowed_header = {'alg', 'typ', 'kid', 'x5t', 'x5t#S256'}
+                  legacy = 'repo:' + repository + ':ref:' + ref
+                  immutable = 'repo:' + owner + '@' + str(claims.get('repository_owner_id')) + '/' + name + '@' + str(claims.get('repository_id')) + ':ref:' + ref
+                  workflow = env.get('GITHUB_WORKFLOW_REF', repository + '/.github/workflows/marketplace-submit.yml@' + ref)
+                  result = {'kind': 'github-identity-profile-diagnostic', 'decoded': True,
+                      'issuerMatches': claims.get('iss') == 'https://token.actions.githubusercontent.com',
+                      'audienceMatches': claims.get('aud') == AUDIENCE,
+                      'shaMatchesRun': claims.get('sha') == commit,
+                      'workflowShaMatchesRun': claims.get('workflow_sha') == commit,
+                      'repositoryMatchesRun': claims.get('repository') == repository,
+                      'repositoryOwnerMatchesRun': claims.get('repository_owner') == owner,
+                      'refMatchesRun': claims.get('ref') == ref,
+                      'workflowRefMatchesRun': claims.get('workflow_ref') == workflow,
+                      'refType': claims.get('ref_type') if claims.get('ref_type') in ('branch', 'tag') else 'other',
+                      'event': claims.get('event_name') if claims.get('event_name') in ('push', 'workflow_dispatch', 'release') else 'other',
+                      'visibility': claims.get('repository_visibility') if claims.get('repository_visibility') in ('public', 'private') else 'other',
+                      'subLegacyMatches': claims.get('sub') == legacy, 'subImmutableMatches': claims.get('sub') == immutable,
+                      'lifetimeSeconds': difference(claims.get('exp'), claims.get('iat')),
+                      'notBeforeOffsetSeconds': difference(claims.get('nbf'), claims.get('iat')),
+                      'tokenAgeSeconds': difference(int(time.time()), claims.get('iat')),
+                      'unexpired': numeric(claims.get('exp')) and claims['exp'] > time.time(),
+                      'timesInteger': all(numeric(claims.get(key)) for key in ('iat', 'nbf', 'exp')),
+                      'headRefEmpty': not claims.get('head_ref'), 'baseRefEmpty': not claims.get('base_ref'),
+                      'environmentEmpty': not claims.get('environment'),
+                      'claimCount': min(len(claims), 97),
+                      'nestedClaimCount': min(sum(type(value) in (list, dict) for value in claims.values()), 97),
+                      'valueTypes': {key: value_type(claims[key]) if key in claims else 'missing' for key in required_claims},
+                      'claimsFlatScalars': all(value is None or type(value) in (str, int, float, bool) for value in claims.values()),
+                      'headerAlgorithm': 'RS256' if header.get('alg') == 'RS256' else 'other',
+                      'headerTypeMatches': header.get('typ') == 'JWT',
+                      'headerKeysAllowed': set(header) <= allowed_header,
+                      'headerFieldCount': min(len(header), 33),
+                      'unsupportedHeaderCount': min(len(set(header) - allowed_header), 33),
+                      'tokenCharacters': len(token),
+                      'signatureBytes': min(len(base64.urlsafe_b64decode(token.split('.')[2] + '=' * (-len(token.split('.')[2]) % 4))), 1025)}
+              except (ValueError, UnicodeError, TypeError):
+                  result = {'kind': 'github-identity-profile-diagnostic', 'decoded': False}
+              print(json.dumps(result), flush=True)
+
           def identity_token(env):
               url = oidc_url(env.get('ACTIONS_ID_TOKEN_REQUEST_URL'))
               credential = env.get('ACTIONS_ID_TOKEN_REQUEST_TOKEN', '')
@@ -137,6 +213,7 @@ jobs:
                   raise WorkflowError('GitHub did not return a bounded identity token.')
               # The marketplace verifies issuer, signature, audience, repository,
               # workflow/ref, source commit, and expiry. Client bytes grant no authority.
+              identity_profile(token, env)
               return token
 
           def git(git_dir, args, timeout=30):
@@ -231,6 +308,19 @@ jobs:
                   review_id = status.get('review', {}).get('id') if isinstance(status.get('review'), dict) else None
                   if isinstance(review_id, str) and re.fullmatch(r'mr_[a-f0-9]{64}', review_id):
                       output['reviewId'] = review_id
+                  # Known rule/check identifiers are useful; arbitrary summaries,
+                  # paths, names and server strings must never enter Actions logs.
+                  checks = status.get('checks', [])
+                  if isinstance(checks, list):
+                      output['checks'] = [{'id': item['id'], 'status': item['status']} for item in checks[:64]
+                          if isinstance(item, dict) and isinstance(item.get('id'), str) and item.get('id') in CHECKS
+                          and item.get('status') in ('passed', 'failed', 'unsupported', 'pending')]
+                  guidelines = status.get('guidelines', {})
+                  findings = guidelines.get('findings', []) if isinstance(guidelines, dict) else []
+                  if isinstance(findings, list):
+                      output['findings'] = [{'ruleId': item['ruleId'], 'severity': item['severity']} for item in findings[:64]
+                          if isinstance(item, dict) and isinstance(item.get('ruleId'), str) and item.get('ruleId') in RULES
+                          and item.get('severity') in ('error', 'warning', 'review')]
                   print(json.dumps(output), flush=True)
                   if state in ('checks-failed', 'qualification-failed', 'checks-pending', 'rejected', 'withdrawn'):
                       raise WorkflowError('Server checks or operator review did not permit publication. Inspect this private receipt.')
