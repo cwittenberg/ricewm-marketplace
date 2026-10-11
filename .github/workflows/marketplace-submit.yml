@@ -31,8 +31,9 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
-      RICE_SOURCE_ROOT: ${{ inputs.source_root || 'packages/cwittenberg/quiet-recipe-starter/1.0.2' }}
+      RICE_SOURCE_ROOT: ${{ inputs.source_root || 'packages/cwittenberg/quiet-recipe-starter/1.0.3' }}
       RICE_MODE: ${{ inputs.mode || 'submit' }}
+      RICE_GITHUB_SOURCE_TOKEN: ${{ github.token }}
     steps:
       # No third-party actions or publisher build scripts run in this job.
       # GitHub's runner supplies Python, Git, and the short-lived OIDC request.
@@ -72,6 +73,8 @@ jobs:
                       raise WorkflowError('Invalid bounded HTTPS header.')
                   if name == 'Authorization' and not re.fullmatch(r'Bearer [A-Za-z0-9_.-]{20,8192}', value):
                       raise WorkflowError('Invalid private transport capability.')
+                  if name == 'X-Rice-Source-Token' and (body is None or url not in (API + '/check', API + '/submissions') or not re.fullmatch(r'[A-Za-z0-9_]{20,512}', value)):
+                      raise WorkflowError('Invalid isolated source acquisition credential.')
                   config.append('header = ' + json.dumps(name + ': ' + value))
               if body is not None:
                   config.append('data-binary = ' + json.dumps(body.decode('ascii')))
@@ -110,6 +113,8 @@ jobs:
           def http_json(url, headers, body=None, expected=200, maximum=256 * 1024):
               if url.startswith(API + '/'):
                   return curl_json(url, headers, body, expected, maximum)
+              if 'X-Rice-Source-Token' in headers:
+                  raise WorkflowError('Source credential cannot authorize the identity provider.')
               # Certificate and hostname verification remain enabled.
               opener = urllib.request.build_opener(urllib.request.ProxyHandler({}),
                   urllib.request.HTTPSHandler(context=ssl.create_default_context()), NoRedirect())
@@ -333,8 +338,16 @@ jobs:
                   time.sleep(10)
               raise WorkflowError('Checks remain pending; retain the private receipt. Do not automatically resubmit.')
 
+          def source_headers(value):
+              if value in (None, ''):
+                  return {}
+              if not isinstance(value, str) or not re.fullmatch(r'[A-Za-z0-9_]{20,512}', value):
+                  raise WorkflowError('Invalid bounded GitHub source credential.')
+              return {'X-Rice-Source-Token': value}
+
           def main():
               repository, commit, root, mode = source_coordinates(os.environ)
+              source_header = source_headers(os.environ.pop('RICE_GITHUB_SOURCE_TOKEN', None))
               runner_temp = pathlib.Path(os.environ['RUNNER_TEMP']).resolve(strict=True)
               directory = pathlib.Path(tempfile.mkdtemp(prefix='rice-submission-', dir=runner_temp))
               os.chmod(directory, 0o700)
@@ -349,9 +362,9 @@ jobs:
               receipt = http_json(API + ('/check' if mode == 'check' else '/submissions'),
                   {'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json',
                    'X-Rice-Source-Root': root, 'X-Rice-Listing-Path': 'marketplace.json',
-                   'X-Rice-Build-Path': 'build.json', 'X-Rice-Media-Path': 'media.json'},
+                   'X-Rice-Build-Path': 'build.json', 'X-Rice-Media-Path': 'media.json', **source_header},
                   body=body, expected=202)
-              del token
+              del token, source_header
               identifier, capability = private_receipt(directory, receipt)
               del receipt
               poll(identifier, capability, mode)

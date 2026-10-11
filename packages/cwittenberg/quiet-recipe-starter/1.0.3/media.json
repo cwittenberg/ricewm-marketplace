@@ -1,0 +1,32 @@
+{
+  "schema": "ricewm.marketplace-media/v1",
+  "rights": "Original MIT-licensed icon by cwittenberg. Screenshot captured from an isolated fresh RiceWM session on env.now after applying this exact recipe on 2026-10-10; no account or personal data. Conversion is an original trusted-input build artifact, not evidence that this processor is authorized for publisher uploads. Native preview/cancel/restart and independent security qualification remain required.",
+  "images": [
+    {
+      "role": "icon",
+      "path": "packages/cwittenberg/quiet-recipe-starter/1.0.3/media/icon.webp",
+      "alt": "Quiet Recipe Starter original icon"
+    },
+    {
+      "role": "screenshot",
+      "path": "packages/cwittenberg/quiet-recipe-starter/1.0.3/media/screen.webp",
+      "alt": "Native RiceWM desktop with the Quiet Work recipe applied on env.now."
+    }
+  ],
+  "credits": [
+    {
+      "path": "packages/cwittenberg/quiet-recipe-starter/1.0.3/media/icon.webp",
+      "creator": "RiceWM contributors",
+      "license": "MIT",
+      "origin": "original",
+      "notice": "packages/cwittenberg/quiet-recipe-starter/1.0.3/LICENSE"
+    },
+    {
+      "path": "packages/cwittenberg/quiet-recipe-starter/1.0.3/media/screen.webp",
+      "creator": "RiceWM contributors",
+      "license": "MIT",
+      "origin": "original",
+      "notice": "packages/cwittenberg/quiet-recipe-starter/1.0.3/LICENSE"
+    }
+  ]
+}
