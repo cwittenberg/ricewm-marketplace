@@ -331,6 +331,10 @@ jobs:
                   if state in ('review-pending', 'approved', 'published'):
                       return  # Operator approval and publication are separate authority.
                   if state == 'review-delivery-blocked' and status.get('progress', {}).get('completed') is True:
+                      review = status.get('review')
+                      delivery_error = review.get('deliveryError') if isinstance(review, dict) else None
+                      if isinstance(delivery_error, dict) and delivery_error.get('code') == 'version-conflict':
+                          raise WorkflowError('This package version already binds different source bytes. Increase the package and listing version together, rebuild, commit and submit the new release.')
                       raise WorkflowError('Operator intake delivery is blocked. Do not automatically resubmit.')
                   time.sleep(10)
               raise WorkflowError('Checks remain pending; retain the private receipt. Do not automatically resubmit.')
