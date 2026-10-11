@@ -3,6 +3,7 @@ import hashlib
 import json
 import os
 import re
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -141,6 +142,55 @@ def feedback(number, message):
     github('/issues/' + str(number) + '/comments', 'POST', {'body': comment})
 
 
+def qualify_issue(number):
+    # OIDC authenticates this fixed trusted registry workflow. The service
+    # independently verifies issue ownership and acquires all pinned source.
+    # Tokens authorize transport/status only and never enter comments or logs.
+    origin = 'https://ricewm.org/marketplace/api'
+    oidc_url = os.environ['ACTIONS_ID_TOKEN_REQUEST_URL'] + '&audience=ricewm-marketplace-submission'
+    request = urllib.request.Request(oidc_url, headers={
+        'Authorization': 'Bearer ' + os.environ['ACTIONS_ID_TOKEN_REQUEST_TOKEN']})
+    with urllib.request.urlopen(request, timeout=30) as response:
+        token = json.load(response)['value']
+    request = urllib.request.Request(origin + '/v1/marketplace/registry/issues',
+        data=json.dumps({'issue': number}).encode(), method='POST', headers={
+            'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token,
+            'X-Rice-Source-Token': os.environ['GITHUB_TOKEN']})
+    opener = urllib.request.build_opener(NoRedirect())
+    try:
+        with opener.open(request, timeout=90) as response:
+            receipt = json.load(response)
+    except urllib.error.HTTPError as error:
+        # Only the fixed trusted service's bounded public validation message;
+        # credentials, response headers and status capabilities are omitted.
+        if error.code in (400, 401, 403, 413, 429):
+            data = error.read(4096)
+            try:
+                message = json.loads(data).get('error', {}).get('message', '')
+            except (ValueError, AttributeError):
+                message = ''
+            if isinstance(message, str) and 0 < len(message) <= 2000:
+                raise IntakeError(message) from None
+        raise IntakeError('Qualification intake is temporarily unavailable; the trusted workflow will need to retry.') from None
+    if not re.fullmatch(r'ms_[a-f0-9]{32}', receipt.get('id', '')):
+        raise IntakeError('Qualification service returned no valid submission receipt.')
+    status_url = origin + '/v1/marketplace/submissions/' + receipt['id']
+    feedback(number, '**Qualification queued.** The trusted service is acquiring the exact commit and running source, media, security and native workflow checks automatically. Operator approval follows successful qualification.')
+    for _ in range(120):
+        time.sleep(5)
+        request = urllib.request.Request(status_url, headers={
+            'Authorization': 'Bearer ' + receipt['statusToken']})
+        with opener.open(request, timeout=30) as response:
+            result = json.load(response)
+        if result.get('state') in ('queued', 'running'):
+            continue
+        state = result.get('state', 'checks-pending')
+        checks = result.get('checks', [])
+        records = '\n'.join('- `' + str(item.get('id', 'check')) + '`: **' + str(item.get('status', 'pending')) + '** — ' + str(item.get('summary', '')) for item in checks)
+        return '**Qualification result: ' + state + '.**\n\n' + records + '\n\nSuccessful qualification makes this exact version available for operator source/rights review and signed publication. Editing the source coordinates reruns checks; CI never approves or publishes a submission.'
+    return '**Qualification is still running.** The durable job continues on the trusted service. Check the Marketplace operator queue for its results.'
+
+
 def main():
     with open(os.environ['GITHUB_EVENT_PATH']) as event_file:
         event = json.load(event_file)
@@ -153,7 +203,7 @@ def main():
         feedback(number, '**Received — checking committed recipe metadata and media.**')
         try:
             check_issue(issue)
-            message = '**Source review required.** The recipe file, icon, screenshots, metadata, descriptions and declared rights are present at the pinned commit, and their byte counts and SHA-256 hashes match. An operator must review the source and rights and qualify the installation profile. Image decoding/security checks are still required before approval.'
+            message = qualify_issue(number)
         except IntakeError as error:
             message = '**Changes needed.** ' + str(error) + '\n\nPublish the corrected files, then edit this issue to use the new exact commit and generated metadata. Editing or reopening the issue reruns intake.'
         except Exception:

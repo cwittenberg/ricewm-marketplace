@@ -16,6 +16,7 @@ on:
 permissions:
   contents: read
   issues: write
+  id-token: write
 concurrency:
   group: recipe-issue-intake
   cancel-in-progress: false
@@ -26,7 +27,7 @@ jobs:
     steps:
       # Read only the trusted registry script, pinned to this workflow commit.
       # Publisher code and actions are never checked out or executed.
-      - name: Check submission and report status on its issue
+      - name: Verify source, qualify submission, and report review status
         env:
           GITHUB_TOKEN: ${{ github.token }}
           SCRIPT_COMMIT: ${{ github.sha }}
