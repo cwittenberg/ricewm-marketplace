@@ -22,12 +22,23 @@ but it must pass qualification for the supported Rice host before approval.
 
 ## Submit and update
 
-Use the repository's submission form for a new creation or a new version. Include
-the public source repository, exact commit, package version, license and component
-types. Never include credentials or private user content. Each new version must
-go through marketplace-owned automated checks, final operator review and the
-separate promotion process. Passing checks never publishes automatically. The
-operator can reject with actionable reasons, but cannot bypass failed checks.
+Use integrated Herdr in [RiceWM](https://env.now/) or the native guest marketplace
+client to prepare, check and submit a new creation or version. The deployed
+service acquires your public repository at one exact commit, independently checks
+the package and stages operator review. Herdr installs the pinned native client;
+Node/npm in the guest and services on your machine are unnecessary.
+
+Include the public source repository, exact commit, package version, license and
+component types. Supply authentication only through a private Rice Terminal
+credential file. Never put credentials or private user content in AI prompts,
+issues, source or screenshots. The GitHub issue form is for discussion; opening
+an issue does not enqueue automated qualification.
+
+Every version goes through marketplace-owned checks, final operator review and
+separate publication. Passing checks never publishes automatically. The operator
+can reject with actionable reasons, but cannot bypass failed checks. The signed
+production catalog currently has no approved entries, and authenticated production
+submission/publication has not yet been verified.
 
 Read [the submission guidelines](SUBMISSION_GUIDELINES.md) before submitting.
 Generated and manually written code follow the same rules.
