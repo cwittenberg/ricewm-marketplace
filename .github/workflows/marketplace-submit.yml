@@ -32,7 +32,7 @@ jobs:
     timeout-minutes: 15
     env:
       RICE_SOURCE_ROOT: ${{ inputs.source_root || 'packages/cwittenberg/quiet-recipe-starter/1.0.2' }}
-      RICE_MODE: ${{ inputs.mode || 'check' }}
+      RICE_MODE: ${{ inputs.mode || 'submit' }}
     steps:
       # No third-party actions or publisher build scripts run in this job.
       # GitHub's runner supplies Python, Git, and the short-lived OIDC request.
