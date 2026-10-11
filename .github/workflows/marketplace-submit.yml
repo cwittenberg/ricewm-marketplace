@@ -1,0 +1,280 @@
+name: Rice marketplace submission
+
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/marketplace-submit.yml']
+  workflow_dispatch:
+    inputs:
+      source_root:
+        description: Committed package directory (packages/publisher/slug/version)
+        required: true
+        type: string
+      mode:
+        description: Preflight or submission for operator review
+        required: true
+        default: check
+        type: choice
+        options: [check, submit]
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: marketplace-${{ github.ref }}-${{ inputs.source_root }}
+  cancel-in-progress: false
+
+jobs:
+  submit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      RICE_SOURCE_ROOT: ${{ inputs.source_root || 'packages/cwittenberg/quiet-recipe-starter/1.0.2' }}
+      RICE_MODE: ${{ inputs.mode || 'check' }}
+    steps:
+      # No third-party actions or publisher build scripts run in this job.
+      # GitHub's runner supplies Python, Git, and the short-lived OIDC request.
+      - name: Send exact committed source for server checks
+        shell: bash
+        run: |
+          set +x
+          umask 077
+          python3 - <<'PY'
+          import base64, hashlib, json, os, pathlib, re, ssl, subprocess, sys, tempfile, time
+          import urllib.error, urllib.parse, urllib.request
+
+          API = 'https://ricewm.org/marketplace/api/v1/marketplace'
+          AUDIENCE = 'ricewm-marketplace-submission'
+          STATES = {'queued', 'running', 'checks-pending', 'checks-failed',
+                    'qualification-failed', 'review-delivery-blocked', 'preflight-complete',
+                    'review-pending', 'approved', 'rejected', 'published', 'withdrawn'}
+
+          class WorkflowError(Exception):
+              pass
+
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self, request, fp, code, message, headers, newurl):
+                  raise WorkflowError('Redirect refused; nothing approved or published.')
+
+          def curl_json(url, headers, body, expected, maximum):
+              if not url.startswith(API + '/') or urllib.parse.urlsplit(url).netloc != 'ricewm.org':
+                  raise WorkflowError('Marketplace transport is fixed to ricewm.org.')
+              config = []
+              for name, value in headers.items():
+                  if not re.fullmatch(r'[A-Za-z0-9-]+', name) or not isinstance(value, str) or any(ord(c) < 32 or ord(c) > 126 for c in value):
+                      raise WorkflowError('Invalid bounded HTTPS header.')
+                  if name == 'Authorization' and not re.fullmatch(r'Bearer [A-Za-z0-9_.-]{20,8192}', value):
+                      raise WorkflowError('Invalid private transport capability.')
+                  config.append('header = ' + json.dumps(name + ': ' + value))
+              if body is not None:
+                  config.append('data-binary = ' + json.dumps(body.decode('ascii')))
+              # Credentials stay on stdin, never in process arguments, files or logs.
+              process = subprocess.run(['curl', '--disable', '--silent', '--show-error',
+                  '--proto', '=https', '--tlsv1.2', '--connect-timeout', '10', '--max-time', '30',
+                  '--max-filesize', str(maximum), '--request', 'POST' if body is not None else 'GET',
+                  '--config', '-', '--write-out', '\n__RICE_HTTP_%{http_code}__\n', '--url', url],
+                  input=('\n'.join(config) + '\n').encode(), stdout=subprocess.PIPE,
+                  stderr=subprocess.DEVNULL, timeout=35, env={'PATH': '/usr/bin:/bin', 'LANG': 'C.UTF-8'})
+              marker = re.search(rb'\n__RICE_HTTP_(\d{3})__\n$', process.stdout)
+              if process.returncode or not marker or int(marker[1]) != expected or marker.start() > maximum:
+                  raise WorkflowError('Marketplace HTTPS request failed; do not automatically resubmit.')
+              try:
+                  result = json.loads(process.stdout[:marker.start()])
+              except (ValueError, UnicodeError):
+                  raise WorkflowError('Invalid marketplace response JSON.') from None
+              if not isinstance(result, dict):
+                  raise WorkflowError('Marketplace response must be an object.')
+              return result
+
+          def http_json(url, headers, body=None, expected=200, maximum=256 * 1024):
+              if url.startswith(API + '/'):
+                  return curl_json(url, headers, body, expected, maximum)
+              # Certificate and hostname verification remain enabled.
+              opener = urllib.request.build_opener(urllib.request.ProxyHandler({}),
+                  urllib.request.HTTPSHandler(context=ssl.create_default_context()), NoRedirect())
+              request = urllib.request.Request(url, data=body, headers=headers,
+                  method='POST' if body is not None else 'GET')
+              try:
+                  with opener.open(request, timeout=30) as response:
+                      raw = response.read(maximum + 1)
+                      if response.status != expected or len(raw) > maximum:
+                          raise WorkflowError('Unexpected or oversized HTTPS response.')
+              except (urllib.error.URLError, TimeoutError) as error:
+                  # Never print request URLs, response bodies, headers, or credentials.
+                  raise WorkflowError('HTTPS request failed; do not automatically resubmit.') from None
+              try:
+                  value = json.loads(raw)
+              except (ValueError, UnicodeError):
+                  raise WorkflowError('Invalid HTTPS response JSON.') from None
+              if not isinstance(value, dict):
+                  raise WorkflowError('HTTPS response must be an object.')
+              return value
+
+          def oidc_url(value):
+              if not isinstance(value, str) or len(value) > 4096 or any(ord(c) < 33 for c in value):
+                  raise WorkflowError('Missing or invalid GitHub runner OIDC URL.')
+              url = urllib.parse.urlsplit(value)
+              host = url.hostname or ''
+              if (url.scheme != 'https' or url.username or url.password or url.fragment
+                  or url.port not in (None, 443)
+                  or not re.fullmatch(r'(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+actions\.githubusercontent\.com', host)):
+                  raise WorkflowError('OIDC URL must use the GitHub Actions HTTPS host.')
+              query = [(key, val) for key, val in urllib.parse.parse_qsl(url.query, keep_blank_values=True)
+                       if key != 'audience']
+              query.append(('audience', AUDIENCE))
+              return urllib.parse.urlunsplit((url.scheme, url.netloc, url.path,
+                  urllib.parse.urlencode(query), ''))
+
+          def identity_token(env):
+              url = oidc_url(env.get('ACTIONS_ID_TOKEN_REQUEST_URL'))
+              credential = env.get('ACTIONS_ID_TOKEN_REQUEST_TOKEN', '')
+              if not credential or len(credential) > 16384 or any(ord(c) < 33 or ord(c) > 126 for c in credential):
+                  raise WorkflowError('GitHub runner OIDC request authority is missing.')
+              result = http_json(url, {'Authorization': 'Bearer ' + credential}, maximum=16384)
+              token = result.get('value')
+              if not isinstance(token, str) or len(token) > 8192 or not re.fullmatch(r'[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+', token):
+                  raise WorkflowError('GitHub did not return a bounded identity token.')
+              # The marketplace verifies issuer, signature, audience, repository,
+              # workflow/ref, source commit, and expiry. Client bytes grant no authority.
+              return token
+
+          def git(git_dir, args, timeout=30):
+              process = subprocess.run(['git', '--git-dir=' + str(git_dir),
+                  '-c', 'protocol.allow=never', '-c', 'protocol.https.allow=always',
+                  '-c', 'core.hooksPath=/dev/null', *args], stdout=subprocess.PIPE,
+                  stderr=subprocess.DEVNULL, timeout=timeout,
+                  env={'PATH': '/usr/bin:/bin', 'HOME': str(git_dir.parent),
+                       'GIT_CONFIG_NOSYSTEM': '1', 'GIT_TERMINAL_PROMPT': '0',
+                       'GIT_CONFIG_GLOBAL': '/dev/null'})
+              if process.returncode:
+                  raise WorkflowError('Exact committed Git source could not be read.')
+              return process.stdout
+
+          def source_coordinates(env):
+              repository, commit, root, mode = [env.get(key, '') for key in
+                  ('GITHUB_REPOSITORY', 'GITHUB_SHA', 'RICE_SOURCE_ROOT', 'RICE_MODE')]
+              if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9-]{0,38}/[A-Za-z0-9_.-]{1,100}', repository) or repository.split('/')[1] in ('.', '..'):
+                  raise WorkflowError('Invalid current GitHub repository.')
+              if not re.fullmatch(r'[a-f0-9]{40}', commit) or mode not in ('check', 'submit'):
+                  raise WorkflowError('Select check/submit and an exact GitHub source commit.')
+              parts = root.split('/')
+              if (len(parts) != 4 or parts[0] != 'packages' or parts[1] != repository.split('/')[0].lower()
+                  or not re.fullmatch(r'[a-z0-9][a-z0-9-]{0,63}', parts[2])
+                  or len(parts[3]) > 64 or not re.fullmatch(r'(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?', parts[3])):
+                  raise WorkflowError('Source root must be packages/current-owner/slug/version.')
+              return repository, commit, root, mode
+
+          def read_blob(git_dir, commit, path, maximum):
+              if (not isinstance(path, str) or len(path) > 512 or not re.fullmatch(r'[A-Za-z0-9_./-]+', path)
+                  or any(not part or part.startswith('.') for part in path.split('/'))):
+                  raise WorkflowError('Unsafe committed source path.')
+              entry = git(git_dir, ['ls-tree', '-z', commit, '--', path]).split(b'\0')
+              if len(entry) != 2 or entry[1] or b'\t' not in entry[0]:
+                  raise WorkflowError('Missing exact committed source file.')
+              metadata, actual_path = entry[0].split(b'\t', 1)
+              if actual_path != path.encode() or not re.fullmatch(rb'100(?:644|755) blob [a-f0-9]{40}', metadata):
+                  raise WorkflowError('Committed sources must be regular files, never symlinks.')
+              size = git(git_dir, ['cat-file', '-s', commit + ':' + path]).strip()
+              if not size.isdigit() or not 1 <= int(size) <= maximum:
+                  raise WorkflowError('Committed file exceeds its byte limit.')
+              raw = git(git_dir, ['cat-file', 'blob', commit + ':' + path])
+              if len(raw) != int(size):
+                  raise WorkflowError('Committed source size changed.')
+              return raw
+
+          def submission(git_dir, repository, commit, root):
+              raw = read_blob(git_dir, commit, root + '/marketplace.json', 64 * 1024)
+              try:
+                  listing = json.loads(raw)
+              except (ValueError, UnicodeError):
+                  raise WorkflowError('Invalid committed listing JSON.') from None
+              if (not isinstance(listing, dict) or listing.get('schema') != 'ricewm.marketplace-listing/v1'
+                  or str(listing.get('repository', '')).lower() != 'https://github.com/' + repository.lower()
+                  or listing.get('id') != '/'.join(root.split('/')[1:3])
+                  or listing.get('version') != root.split('/')[3]):
+                  raise WorkflowError('Listing must match this repository, publisher, package, and version.')
+              artifact_path = listing.get('artifact')
+              if not isinstance(artifact_path, str) or not artifact_path.startswith(root + '/'):
+                  raise WorkflowError('Artifact must stay within the selected package directory.')
+              artifact = read_blob(git_dir, commit, artifact_path,
+                  256 * 1024 if listing.get('type') == 'appearance-recipe' else 16 * 1024 * 1024)
+              for filename, schema in [('build.json', 'ricewm.marketplace-build/v1'), ('media.json', 'ricewm.marketplace-media/v1')]:
+                  value = json.loads(read_blob(git_dir, commit, root + '/' + filename, 64 * 1024))
+                  if not isinstance(value, dict) or value.get('schema') != schema:
+                      raise WorkflowError('Missing committed build/media contract.')
+              return {'schema': 'ricewm.marketplace-submission-request/v1',
+                  'status': 'local-draft-not-submitted', 'source': {'commit': commit},
+                  'listingTransport': {'encoding': 'base64', 'bytes': len(raw),
+                      'sha256': hashlib.sha256(raw).hexdigest(), 'content': base64.b64encode(raw).decode()},
+                  'artifact': {'bytes': len(artifact), 'sha256': hashlib.sha256(artifact).hexdigest()},
+                  'security': {'qualified': False, 'guidelinesChecked': False,
+                      'sourceAcquisition': 'guest-files-unverified-against-commit'},
+                  'operatorReview': {'required': True, 'decision': 'pending'}}
+
+          def private_receipt(directory, value):
+              identifier, token = value.get('id'), value.get('statusToken')
+              if not isinstance(identifier, str) or not re.fullmatch(r'ms_[a-f0-9]{32}', identifier) or not isinstance(token, str) or not re.fullmatch(r'[A-Za-z0-9_-]{43}', token):
+                  raise WorkflowError('Submission response lacks a valid private receipt; do not resubmit automatically.')
+              path = directory / 'submission-receipt.json'
+              with os.fdopen(os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600), 'w') as saved:
+                  json.dump({'id': identifier, 'statusToken': token}, saved)
+              return identifier, token
+
+          def poll(identifier, token, mode):
+              for attempt in range(60):
+                  status = http_json(API + '/submissions/' + identifier, {'Authorization': 'Bearer ' + token})
+                  state = status.get('state')
+                  if status.get('id') != identifier or state not in STATES or 'statusToken' in status:
+                      raise WorkflowError('Invalid private submission status.')
+                  output = {'id': identifier, 'state': state}
+                  review_id = status.get('review', {}).get('id') if isinstance(status.get('review'), dict) else None
+                  if isinstance(review_id, str) and re.fullmatch(r'mr_[a-f0-9]{64}', review_id):
+                      output['reviewId'] = review_id
+                  print(json.dumps(output), flush=True)
+                  if state in ('checks-failed', 'qualification-failed', 'checks-pending', 'rejected', 'withdrawn'):
+                      raise WorkflowError('Server checks or operator review did not permit publication. Inspect this private receipt.')
+                  if state == 'preflight-complete' and mode == 'check':
+                      return
+                  if state in ('review-pending', 'approved', 'published'):
+                      return  # Operator approval and publication are separate authority.
+                  if state == 'review-delivery-blocked' and status.get('progress', {}).get('completed') is True:
+                      raise WorkflowError('Operator intake delivery is blocked. Do not automatically resubmit.')
+                  time.sleep(10)
+              raise WorkflowError('Checks remain pending; retain the private receipt. Do not automatically resubmit.')
+
+          def main():
+              repository, commit, root, mode = source_coordinates(os.environ)
+              runner_temp = pathlib.Path(os.environ['RUNNER_TEMP']).resolve(strict=True)
+              directory = pathlib.Path(tempfile.mkdtemp(prefix='rice-submission-', dir=runner_temp))
+              os.chmod(directory, 0o700)
+              git_dir = directory / 'source.git'
+              git(git_dir, ['init', '--bare', str(git_dir)])
+              git(git_dir, ['fetch', '--quiet', '--depth=1', '--no-tags',
+                  'https://github.com/' + repository + '.git', commit], timeout=120)
+              if git(git_dir, ['rev-parse', 'FETCH_HEAD^{commit}']).strip().decode() != commit:
+                  raise WorkflowError('Fetched source differs from the immutable GitHub run commit.')
+              body = json.dumps(submission(git_dir, repository, commit, root), separators=(',', ':')).encode()
+              token = identity_token(os.environ)
+              receipt = http_json(API + ('/check' if mode == 'check' else '/submissions'),
+                  {'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json',
+                   'X-Rice-Source-Root': root, 'X-Rice-Listing-Path': 'marketplace.json',
+                   'X-Rice-Build-Path': 'build.json', 'X-Rice-Media-Path': 'media.json'},
+                  body=body, expected=202)
+              del token
+              identifier, capability = private_receipt(directory, receipt)
+              del receipt
+              poll(identifier, capability, mode)
+
+              # Receipt remains private in RUNNER_TEMP; never upload it.
+
+          if __name__ == '__main__':
+              try:
+                  main()
+              except WorkflowError as error:
+                  print(str(error), file=sys.stderr)
+                  sys.exit(1)
+              except Exception:
+                  print('Submission workflow failed; nothing approved or published.', file=sys.stderr)
+                  sys.exit(1)
+          PY
