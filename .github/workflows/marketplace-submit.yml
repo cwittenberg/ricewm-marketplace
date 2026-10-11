@@ -32,7 +32,7 @@ jobs:
     timeout-minutes: 15
     strategy:
       fail-fast: false
-      max-parallel: 2
+      max-parallel: 1
       matrix:
         source_root: ${{ github.event_name == 'workflow_dispatch' && fromJSON(format('[{0}]', toJSON(inputs.source_root))) || fromJSON('["packages/cwittenberg/fresh-publish-proof/1.0.0","packages/cwittenberg/quiet-recipe-starter/1.0.3","packages/cwittenberg/gnome-indicator-starter/1.0.0"]') }}
     env:
