@@ -1,64 +1,68 @@
-# RiceWM community packages
+# RiceWM marketplace submissions
 
-Public packages and catalog records for RiceWM: `.riceapp` applications,
-desktop recipes, custom GNOME extensions, KDE widgets and combined bundles.
-Portable spatial desktops, including Construct worlds, can also be submitted
-with their contained world, models, theme, license and authoring sources. They
-declare the Rice spatial engine API and required host capabilities. The shared
-renderer is supplied by RiceWM; authoring source files are never install hooks.
+This repository contains public plugin sources, media and submission contracts.
+Marketplace implementation, scanning workers and operator controls remain private
+in Webexe. Publishers can keep code in their own public GitHub repositories.
 
-This repository contains distributable creations. Marketplace UI, services,
-scanners and RiceWM host implementation are maintained privately in `webexe`.
-Publishers may maintain their original source repositories; releases mirrored
-here remain tied to one source commit and immutable package digest.
+Marketplace: https://ricewm.org/marketplace/. SDK examples, recipe structure and
+submission guidelines: https://ricewm.org/#developer.
 
-## Current state
+## Package files
 
-The initial packages are **development examples, not Rice approved releases**.
-They are intended for compatibility and admission testing. No CI or runtime
-security approval is implied by their presence, a GitHub star or a successful
-download. Custom extension/widget code does not require an upstream store listing,
-but it must pass qualification for the supported Rice host before approval.
+Each version has its own directory:
 
-## Submit and update
+```text
+packages/<publisher>/<slug>/<version>/
+  marketplace.json   Listing and artifact paths
+  build.json         Exact source-to-package mapping
+  media.json         Icon, screenshots and retained credits
+  LICENSE           Complete license notice
+  README.md         Usage and source/asset credits
+  media/            Server-normalized WebP icon and screenshots
+  src/              Retained app, extension, widget or recipe sources
+  dist/             Exact exported .riceapp or recipe artifact
+```
 
-Use integrated Herdr in [RiceWM](https://env.now/) or the native guest marketplace
-client to prepare, check and submit a new creation or version. The deployed
-service acquires your public repository at one exact commit, independently checks
-the package and stages operator review. Herdr installs the pinned native client;
-Node/npm in the guest and services on your machine are unnecessary.
+The publisher namespace must match the repository owner. Contracts also support
+source files directly in the version directory. Follow the exact paths returned
+by Herdr staging and source preparation.
 
-Include the public source repository, exact commit, package version, license and
-component types. Supply authentication only through a private Rice Terminal
-credential file. Never put credentials or private user content in AI prompts,
-issues, source or screenshots. The GitHub issue form is for discussion; opening
-an issue does not enqueue automated qualification.
+## Submit
 
-Every version goes through marketplace-owned checks, final operator review and
-separate publication. Passing checks never publishes automatically. The operator
-can reject with actionable reasons, but cannot bypass failed checks. The signed
-production catalog currently has no approved entries, and authenticated production
-submission/publication has not yet been verified.
+Herdr can generate and exercise SDK apps, custom GNOME extensions, Qt widgets and
+palette recipes, then stage their source and artifacts for submission. Full
+Construct and mixed bundles can also be staged. KDE, Construct and mixed-bundle
+marketplace qualification remains incomplete; staging does not approve them.
 
-Read [the submission guidelines](SUBMISSION_GUIDELINES.md) before submitting.
-Generated and manually written code follow the same rules.
+The guest-native `rice marketplace` command exposes source preparation,
+publication, checks, submission and status. Neither path requires Node/npm in the
+guest or a service on the user's host machine. Configure GitHub credentials
+privately in the guest; never paste them into Herdr or commit them.
 
-Existing approved versions remain available while an update is reviewed. Reusing
-a published version with different bytes is prohibited. The serving authority
-will be the verified marketplace catalog; raw repository content cannot grant
-approval or user permissions.
+Alternatively, choose **Actions → Rice marketplace submission → Run workflow**:
 
-`CATALOG.json` records the starter package inventory and actual SHA-256 digests.
-It is explicitly unsigned development metadata. The app examples use the existing
-Rice SDK; bundle descriptors exercise the proposed component admission contract.
-They do not silently install or enable embedded desktop code.
+1. Select the branch containing the new version.
+2. Enter its `packages/<publisher>/<slug>/<version>` directory.
+3. Choose `check` for preflight, or `submit` for full server qualification and
+   operator review.
 
-## Icons and screenshots
+The workflow sends an immutable commit and bounded source credentials to the
+marketplace. It runs no contributor build scripts and publishes nothing itself.
+Checks and media processing run server-side. A passing submission still needs an
+operator's explicit approval and publication decision.
 
-Submit one square icon and one to eight screenshots with descriptions, asset
-rights, repository paths and SHA-256 digests. Prefer metadata-stripped WebP.
-Media must exist at the exact submitted source commit. The marketplace must
-independently decode and normalize images in isolation, apply byte/pixel limits
-and scan current decoder/codec/container dependencies before approval. Conversion
-alone is not proof of image safety. No such CI approval is currently granted by
-this development registry. Never submit screenshots containing private data.
+## Updates and retries
+
+Every submitted version binds its source commit and exact package bytes. Change
+the version for changed source, even if the exported artifact happens to match.
+For renewed evidence against the same source, rerun the original Actions job;
+that preserves its commit. Starting a new workflow from a later branch head
+selects a different commit.
+
+Editing workflows does not automatically resubmit existing versions or use the
+publisher's submission allowance. The service limits admissions to four per
+publisher per hour. Retain a pending receipt and poll instead of resubmitting.
+
+Raw repository contents, a merged PR and a green workflow do not constitute
+marketplace approval. Discovery and installation use the signed approved catalog.
+Never commit access tokens, signing keys, private findings or user documents.

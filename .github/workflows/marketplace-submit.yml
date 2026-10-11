@@ -1,9 +1,6 @@
 name: Rice marketplace submission
 
 on:
-  push:
-    branches: [main]
-    paths: ['.github/workflows/marketplace-submit.yml']
   workflow_dispatch:
     inputs:
       source_root:
@@ -27,17 +24,12 @@ concurrency:
 
 jobs:
   submit:
-    if: github.event_name == 'workflow_dispatch' || github.repository == 'cwittenberg/ricewm-marketplace'
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
-    strategy:
-      fail-fast: false
-      max-parallel: 1
-      matrix:
-        source_root: ${{ github.event_name == 'workflow_dispatch' && fromJSON(format('[{0}]', toJSON(inputs.source_root))) || fromJSON('["packages/cwittenberg/fresh-publish-proof/1.0.0","packages/cwittenberg/quiet-recipe-starter/1.0.3","packages/cwittenberg/gnome-indicator-starter/1.0.0"]') }}
     env:
-      RICE_SOURCE_ROOT: ${{ matrix.source_root }}
-      RICE_MODE: ${{ inputs.mode || 'submit' }}
+      RICE_SOURCE_ROOT: ${{ inputs.source_root }}
+      RICE_MODE: ${{ inputs.mode }}
       RICE_GITHUB_SOURCE_TOKEN: ${{ github.token }}
     steps:
       # No third-party actions or publisher build scripts run in this job.
