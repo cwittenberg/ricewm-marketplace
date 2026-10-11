@@ -80,9 +80,11 @@ def check_issue(issue, fetch=source_file):
     artifact = metadata.get('artifact')
     if not isinstance(artifact, dict) or artifact.get('path') != field(packaging, 'Artifact') or artifact.get('sha256') != field(packaging, 'SHA-256') or str(artifact.get('bytes')) != field(packaging, 'Bytes'):
         raise IntakeError('Committed metadata must identify the same artifact, SHA-256 and byte count as this issue.')
+    if not isinstance(artifact.get('path'), str) or not artifact['path'].endswith(('.riceapp', '.rice.json', '.ricebundle')):
+        raise IntakeError('Use an exported RiceWM recipe package.')
     def verify(entry, maximum):
         size = entry.get('bytes')
-        if type(size) is not int or not 1 <= size <= maximum or not SHA.fullmatch(entry.get('sha256', '')):
+        if type(size) is not int or not 1 <= size <= maximum or not isinstance(entry.get('sha256'), str) or not SHA.fullmatch(entry['sha256']):
             raise IntakeError('Invalid committed file identity.')
         value = fetch(repository, commit, entry.get('path'), size)
         if len(value) != size or hashlib.sha256(value).hexdigest() != entry['sha256']:
@@ -90,12 +92,13 @@ def check_issue(issue, fetch=source_file):
         return value
     verify(artifact, 16 * 1024 * 1024)
     media = metadata.get('media')
-    if not isinstance(media, list) or not 2 <= len(media) <= 9 or not all(isinstance(m, dict) for m in media) or sum(m.get('role') == 'icon' for m in media) != 1 or not 1 <= sum(m.get('role') == 'screenshot' for m in media) <= 8:
+    if not isinstance(media, list) or not 2 <= len(media) <= 10 or not all(isinstance(m, dict) for m in media) or sum(m.get('role') == 'icon' for m in media) != 1 or not 1 <= sum(m.get('role') == 'screenshot' for m in media) <= 8 or sum(m.get('role') == 'video-preview' for m in media) > 1:
         raise IntakeError('Include one icon and one to eight desktop screenshots in committed metadata.')
     paths = set()
     for entry in media:
-        if entry.get('role') not in ('icon', 'screenshot') or not isinstance(entry.get('path'), str) or not entry['path'].endswith('.webp') or entry['path'] in paths:
-            raise IntakeError('Media paths must identify distinct WebP files.')
+        video = entry.get('role') == 'video-preview'
+        if entry.get('role') not in ('icon', 'screenshot', 'video-preview') or not isinstance(entry.get('path'), str) or not entry['path'].endswith('.mp4' if video else '.webp') or entry['path'] in paths:
+            raise IntakeError('Media paths must identify distinct WebP images or an MP4 preview.')
         paths.add(entry['path'])
         for key, limit in [('alt', 280), ('license', 128), ('credits', 1000)]:
             value = entry.get(key)
@@ -104,8 +107,13 @@ def check_issue(issue, fetch=source_file):
         width, height = entry.get('width'), entry.get('height')
         if type(width) is not int or type(height) is not int or not 1 <= width <= 4096 or not 1 <= height <= 4096 or entry['role'] == 'icon' and width != height:
             raise IntakeError('Images need bounded dimensions and a square icon.')
-        image = verify(entry, 1024 * 1024 if entry['role'] == 'icon' else 5 * 1024 * 1024)
-        if len(image) < 12 or image[:4] != b'RIFF' or image[8:12] != b'WEBP' or int.from_bytes(image[4:8], 'little') != len(image) - 8:
+        image = verify(entry, 2 * 1024 * 1024 if video else 1024 * 1024 if entry['role'] == 'icon' else 5 * 1024 * 1024)
+        if video:
+            if not artifact['path'].endswith('.ricebundle') or width > 640 or height > 360 or type(entry.get('durationMillis')) is not int or not 1000 <= entry['durationMillis'] <= 30000 or type(entry.get('frameRate')) is not int or not 1 <= entry['frameRate'] <= 30 or not isinstance(entry.get('wallpaperSha256'), str) or not SHA.fullmatch(entry['wallpaperSha256']) or not any(m.get('role') == 'screenshot' and m.get('sha256') == entry.get('posterSha256') for m in media):
+                raise IntakeError('Video preview must bind its packaged wallpaper and included poster with bounded timing and dimensions.')
+            if len(image) < 24 or image[4:8] != b'ftyp' or not 16 <= int.from_bytes(image[:4], 'big') <= min(len(image), 4096):
+                raise IntakeError('Committed preview is not an MP4 container.')
+        elif len(image) < 12 or image[:4] != b'RIFF' or image[8:12] != b'WEBP' or int.from_bytes(image[4:8], 'little') != len(image) - 8:
             raise IntakeError('Committed media is not a valid WebP container: ' + entry['path'])
     return metadata
 
