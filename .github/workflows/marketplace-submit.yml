@@ -73,7 +73,7 @@ jobs:
                       raise WorkflowError('Invalid bounded HTTPS header.')
                   if name == 'Authorization' and not re.fullmatch(r'Bearer [A-Za-z0-9_.-]{20,8192}', value):
                       raise WorkflowError('Invalid private transport capability.')
-                  if name == 'X-Rice-Source-Token' and (body is None or url not in (API + '/check', API + '/submissions') or not re.fullmatch(r'[A-Za-z0-9_]{20,512}', value)):
+                  if name == 'X-Rice-Source-Token' and (body is None or url not in (API + '/check', API + '/submissions') or not re.fullmatch(r'[A-Za-z0-9_.-]{20,4096}', value)):
                       raise WorkflowError('Invalid isolated source acquisition credential.')
                   config.append('header = ' + json.dumps(name + ': ' + value))
               if body is not None:
@@ -341,7 +341,7 @@ jobs:
           def source_headers(value):
               if value in (None, ''):
                   return {}
-              if not isinstance(value, str) or not re.fullmatch(r'[A-Za-z0-9_]{20,512}', value):
+              if not isinstance(value, str) or not re.fullmatch(r'[A-Za-z0-9_.-]{20,4096}', value):
                   raise WorkflowError('Invalid bounded GitHub source credential.')
               return {'X-Rice-Source-Token': value}
 
