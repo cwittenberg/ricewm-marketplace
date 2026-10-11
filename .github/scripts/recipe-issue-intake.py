@@ -163,7 +163,7 @@ def qualify_issue(number):
     except urllib.error.HTTPError as error:
         # Only the fixed trusted service's bounded public validation message;
         # credentials, response headers and status capabilities are omitted.
-        if error.code in (400, 401, 403, 413, 429, 502, 503):
+        if error.code in (400, 401, 403, 409, 413, 429, 502, 503):
             data = error.read(4096)
             try:
                 message = json.loads(data).get('error', {}).get('message', '')
@@ -171,7 +171,7 @@ def qualify_issue(number):
                 message = ''
             if isinstance(message, str) and 0 < len(message) <= 2000:
                 raise IntakeError(message) from None
-        raise IntakeError('Qualification intake is temporarily unavailable; the trusted workflow will need to retry.') from None
+        raise IntakeError('Qualification intake is temporarily unavailable (HTTP ' + str(error.code) + '); the trusted workflow will need to retry.') from None
     if not re.fullmatch(r'ms_[a-f0-9]{32}', receipt.get('id', '')):
         raise IntakeError('Qualification service returned no valid submission receipt.')
     status_url = origin + '/v1/marketplace/submissions/' + receipt['id']
