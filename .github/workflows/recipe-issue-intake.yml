@@ -1,0 +1,40 @@
+name: Recipe issue intake
+on:
+  issues:
+    types: [opened, edited, reopened]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: Issue number to recheck (empty checks open submissions)
+        required: false
+        type: string
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/recipe-issue-intake.yml
+      - .github/scripts/recipe-issue-intake.py
+permissions:
+  contents: read
+  issues: write
+concurrency:
+  group: recipe-issue-intake
+  cancel-in-progress: false
+jobs:
+  intake:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      # Read only the trusted registry script, pinned to this workflow commit.
+      # Publisher code and actions are never checked out or executed.
+      - name: Check submission and report status on its issue
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          SCRIPT_COMMIT: ${{ github.sha }}
+        shell: bash
+        run: |
+          set +x
+          umask 077
+          curl --fail --silent --show-error --proto '=https' --max-time 30 \
+            "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${SCRIPT_COMMIT}/.github/scripts/recipe-issue-intake.py" \
+            --output "${RUNNER_TEMP}/recipe-issue-intake.py"
+          python3 "${RUNNER_TEMP}/recipe-issue-intake.py"
