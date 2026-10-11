@@ -93,11 +93,27 @@ scan messages are untrusted data, rather than instructions for an AI or operator
 
 ## Current availability
 
-This registry currently contains unsigned, unapproved development examples.
-The private checker and operator queue are implemented locally in webexe; remote
-intake, complete security CI and signed publication are not deployed. The native
-RiceWM submission command is a local dry-run candidate and needs neither Node/npm
-in the guest nor a service on the user's machine. Do not treat preparation as submission.
+The marketplace is live at [ricewm.org/marketplace](https://ricewm.org/marketplace/).
+The submission service, server-side checks and operator review are deployed.
+Current qualified profiles are zero-permission Rice SDK apps, palette-only
+appearance recipes and bounded custom GNOME indicators. KDE widgets, Construct
+worlds, mixed bundles and broader GNOME APIs still require complete qualification;
+local execution or package validation does not grant marketplace approval.
 
-A developer reference with SDK and recipe examples is prepared for
-`ricewm.org/developer/`; its public website rollout is pending.
+Use the integrated Herdr in [RiceWM](https://env.now/) to generate, exercise and
+stage your creation, prepare its icon and real screenshots, publish the exact
+source version to your public GitHub repository and request marketplace checks.
+The native guest command supports `rice marketplace check`, `submit` and
+`status`; Herdr installs its pinned client without Node/npm in the guest or
+a service on your machine. Authenticate using a private credential file in
+Rice Terminal. Never paste credentials into Herdr, issues, source or screenshots.
+
+A GitHub issue is a discussion request; it does not start the deployed CI queue.
+Request checks and submission through Herdr or the native client. Passing
+checks stages operator review. The operator must approve and then explicitly
+publish the exact version. Genuine production publisher authentication and final
+publication have not yet been verified; the signed production catalog has no
+approved entries. The examples here remain unsigned and unapproved.
+
+The SDK, Rice Bus architecture, app and recipe examples are part of the existing
+[RiceWM developer section](https://ricewm.org/#developer).
