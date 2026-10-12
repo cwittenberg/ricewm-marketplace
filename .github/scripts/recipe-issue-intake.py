@@ -91,7 +91,7 @@ def check_issue(issue, fetch=source_file):
         if len(value) != size or hashlib.sha256(value).hexdigest() != entry['sha256']:
             raise IntakeError('Committed file hash or size mismatch: ' + entry['path'])
         return value
-    verify(artifact, 16 * 1024 * 1024)
+    verify(artifact, (24 if artifact['path'].endswith('.rice.json') else 16) * 1024 * 1024)
     media = metadata.get('media')
     if not isinstance(media, list) or not 2 <= len(media) <= 10 or not all(isinstance(m, dict) for m in media) or sum(m.get('role') == 'icon' for m in media) != 1 or not 1 <= sum(m.get('role') == 'screenshot' for m in media) <= 8 or sum(m.get('role') == 'video-preview' for m in media) > 1:
         raise IntakeError('Include one icon and one to eight desktop screenshots in committed metadata.')
