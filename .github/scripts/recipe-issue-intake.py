@@ -16,6 +16,10 @@ class IntakeError(Exception):
     pass
 
 
+class RetryableIntakeError(IntakeError):
+    pass
+
+
 class NoRedirect(urllib.request.HTTPRedirectHandler):
     def redirect_request(self, request, fp, code, msg, headers, newurl):
         raise IntakeError('Source redirects are refused. Use committed files in the declared repository.')
@@ -170,8 +174,8 @@ def qualify_issue(number):
             except (ValueError, AttributeError):
                 message = ''
             if isinstance(message, str) and 0 < len(message) <= 2000:
-                raise IntakeError(message) from None
-        raise IntakeError('Qualification intake is temporarily unavailable (HTTP ' + str(error.code) + '); the trusted workflow will need to retry.') from None
+                raise (RetryableIntakeError if error.code in (429, 502, 503) else IntakeError)(message) from None
+        raise RetryableIntakeError('Qualification intake is temporarily unavailable (HTTP ' + str(error.code) + '); the trusted workflow will need to retry.') from None
     if not re.fullmatch(r'ms_[a-f0-9]{32}', receipt.get('id', '')):
         raise IntakeError('Qualification service returned no valid submission receipt.')
     status_url = origin + '/v1/marketplace/submissions/' + receipt['id']
@@ -204,6 +208,8 @@ def main():
         try:
             check_issue(issue)
             message = qualify_issue(number)
+        except RetryableIntakeError as error:
+            message = '**Intake temporarily unavailable.** ' + str(error) + '\n\nYour committed recipe has not been rejected. Retry intake by reopening the issue; no republish is required for a service failure.'
         except IntakeError as error:
             message = '**Changes needed.** ' + str(error) + '\n\nPublish the corrected files, then edit this issue to use the new exact commit and generated metadata. Editing or reopening the issue reruns intake.'
         except Exception:
